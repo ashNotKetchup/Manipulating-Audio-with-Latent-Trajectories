@@ -1,0 +1,13 @@
+generative_models/*
+discriminator_models/*
+figures/*
+sound_corpora/*
+output/* 
+classifiers/*
+legacy_code/*
+audio/*
+*.png
+*.wav
+*.ts
+.mypy_cache/
+!generative_models/percussion.ts
