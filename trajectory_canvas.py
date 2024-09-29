@@ -159,7 +159,7 @@ class trajectory_canvas:
 
     def refresh(self):
         """Call the function which has been assigned to this object, redraw interface"""
-        self.refresh_function(self.get_data(), self.latent_dimension, self.get_data())
+        self.refresh_function('Rendered Audio:', self.latent_dimension, self.get_data())
         self.canvas.clear()
         self.draw_tensor()
         # plot tensor contents in canvas
