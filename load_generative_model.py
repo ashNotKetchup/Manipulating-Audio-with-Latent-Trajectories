@@ -1,7 +1,8 @@
 import torch
 import librosa as li
 import numpy as np
-
+from typing import List
+from functools import reduce
 
 class latent_model:
     """
@@ -13,11 +14,9 @@ class latent_model:
     Methods:
 
     """
-    def __init__(self, model_location:str) -> None:
-        self.__model = self.__load_model(model_location)
-        self.__model.double()
+    def __init__(self, model_locations:List[str]) -> None:
+        self.__models: list = [self.__load_model(model_location) for model_location in model_locations] # array of loaded models
         self.number_of_dimensions: int = self.__get_shape()[1]
-
     def __get_shape(self):
          """Generate random audio to get the shape of its latent representation
          """
@@ -44,7 +43,9 @@ class latent_model:
         Returns:
         PyTorch model
         """
-        return torch.jit.load(model_location) # Load Model
+        loaded_model = torch.jit.load(model_location) # Load Model
+        loaded_model.double() # change weights type 
+        return loaded_model
 
     def encode_audio(self, audio_array: np.ndarray) -> torch.Tensor:
         """
@@ -59,7 +60,9 @@ class latent_model:
         # check type, convert np to torch, so we can take both....
         audio_torch: torch.Tensor = torch.from_numpy(audio_array).reshape(1,1,-1) #.double()
         with torch.no_grad():
-            y: torch.Tensor = self.__model.encode(audio_torch)
+            # Use reduce to recursively apply the encode() method of each object
+            y = reduce(lambda acc, each_encoder: each_encoder.encode(acc), self.__models, audio_torch) #does g.encode(f.encode(x)) for a list of models [f,g] and input audio_torch
+        # y = reduce(self.__encode, )
 
         return y
 
@@ -74,11 +77,15 @@ class latent_model:
         Audio file (x_hat): np array of shape [], where
         """
         with torch.no_grad():
-            decoded_audio=self.__model.decode(latent_representation).numpy().reshape(-1)
-            decoded_audio = decoded_audio[:len(decoded_audio) // 2]
-            return decoded_audio
+            # Use reduce to recursively apply the encode() method of each object
+            decoded_audio: np.ndarray = reduce(lambda acc, each_decoder: each_decoder.decode(acc), reversed(self.__models), latent_representation).numpy() #does f.decode(g.decode(x)) for a list of models [f,g] and input laternt_representation
+            # y = reduce(self.__encode, )
 
-
+        decoded_audio= decoded_audio.reshape(-1) # reshape to match audio output shape
+        decoded_audio = decoded_audio[:len(decoded_audio) // 2] # half the length, covering a bug somewhere i think
+        return decoded_audio
+        
+    
 def load_audio(file_path: str) -> np.ndarray:
         """
         Load an audio file into a numpy array

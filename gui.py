@@ -66,17 +66,19 @@ class interface:
         new_latent_data: Incoming data for updating
         """
         with self.audio_playback_canvas:
+            
             clear_output()
-            print(f"Rendered Audio:")
+            print(event)
+            # print(f"Rendered Audio:")
 
             # Generate audio buffer
             self.latent_representation[0,dimension_to_update,:] = new_latent_data
-            new_audio = self.model.decode_audio(self.latent_representation)
-            audio_buffer = new_audio
+            # new_audio = self.model.decode_audio(self.latent_representation)
+            # audio_buffer = 
             
             # Create an IPython Audio object and display it
-            audio_widget = Audio(audio_buffer, rate=44100, autoplay=True)
-            display(audio_widget)
+            # audio_widget = Audio(new_audio, rate=44100, autoplay=True)
+            # display(audio_widget)
 
     # Define the callback function
     def on_dropdown_change(self,change):
