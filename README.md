@@ -6,6 +6,8 @@
 Run locally or launch on binder:
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ashNotKetchup/Manipulating-Audio-with-Latent-Trajectories/HEAD)
 
+Open `latent_manipulation.ipynb`
+
 Introductory Video:
 
 [![editing a latent trajectory](/assets/images/interface.gif)](https://youtu.be/39BM_2Y56B8)
