@@ -1,4 +1,4 @@
-# MALT-Manipulating-Audio-with-Latent-Representations
+# MALT-Manipulating-Audio-with-Latent-Trajectories
  Interface for editing audio via manipulation of its representation in a latent audio model
 
 <!--- Todo: add gif of interface. --->
