@@ -11,3 +11,4 @@ audio/*
 *.ts
 .mypy_cache/
 !generative_models/percussion.ts
+test.py
