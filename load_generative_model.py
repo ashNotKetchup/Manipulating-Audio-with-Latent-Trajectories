@@ -59,11 +59,11 @@ class latent_model:
         """
         # check type, convert np to torch, so we can take both....
         audio_torch: torch.Tensor = torch.from_numpy(audio_array).reshape(1,1,-1) #.double()
+        
         with torch.no_grad():
             # Use reduce to recursively apply the encode() method of each object
             y = reduce(lambda acc, each_encoder: each_encoder.encode(acc), self.__models, audio_torch) #does g.encode(f.encode(x)) for a list of models [f,g] and input audio_torch
-        # y = reduce(self.__encode, )
-
+    
         return y
 
     def decode_audio(self, latent_representation: torch.Tensor) -> np.ndarray:
