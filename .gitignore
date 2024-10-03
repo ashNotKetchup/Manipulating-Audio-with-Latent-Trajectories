@@ -12,3 +12,5 @@ audio/*
 .mypy_cache/
 !generative_models/percussion.ts
 test.py
+.venv/
+.venv
