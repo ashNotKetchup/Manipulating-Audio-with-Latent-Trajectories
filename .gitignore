@@ -14,3 +14,4 @@ audio/*
 test.py
 .venv/
 .venv
+!audio/2267__jovica__90-bpm-attack-loop-3-hihats-mastered-16-bit.wav
