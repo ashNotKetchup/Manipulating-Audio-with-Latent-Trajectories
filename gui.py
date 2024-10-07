@@ -89,4 +89,8 @@ class interface:
         """
         self.app.children = [self.dimension_dropdown, self.guis[change['new']].canvas, self.audio_playback_canvas]
 
+    def export_canvases(self, destination_folder) -> None:
+        """Save each canvas to a folder"""
+        for i,each_gui in enumerate(self.guis):
+            each_gui.save_canvas(destination_folder, i) #presumes self.guis keeps the dimensions correctly indexed.
 # %%

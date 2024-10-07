@@ -149,6 +149,7 @@ class trajectory_canvas:
         # print(self.canvas_trajectory.max(dim=0)[0])
         # print(self.canvas_trajectory)
         self.refresh()
+        # self.save_canvas('', 0)
         
 
     # Function to clear the canvas and reset the tensor
@@ -169,3 +170,12 @@ class trajectory_canvas:
     def get_data(self) -> torch.Tensor:
         """Get the underlying data currently represented in canvas"""
         return self.trajectory_data
+
+    def save_canvas(self, destination_folder, dimension) -> None:
+        """save the current state of the canvas to a given folder"""
+        destination_string = destination_folder + '/' + 'canvas_dimension_' + str(dimension)
+        
+        self.refresh()
+        self.canvas.save(destination_string)
+
+
