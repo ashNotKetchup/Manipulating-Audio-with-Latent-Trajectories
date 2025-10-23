@@ -5,6 +5,7 @@ from typing import List, Union, Tuple
 from functools import reduce
 import json
 import math
+from global_scaler import GlobalScaler
 
 # -------------------------------
 # AI model class
@@ -156,8 +157,9 @@ class LatentRepresentation:
     """
     Manages the internal state and conversion of latent representations, including JSON serialization/deserialization,
     Stores the latent representation as a NumPy array (length x channel_count)
-
+    can also pass json scaled to a certain range  if needed
     Public methods:
+    - fit(): set the scaler
     - set_latent_representation(np.ndarray): Set the latent representation from a NumPy array.
     - get_latent_representation() -> np.ndarray: Get the current latent representation as a NumPy array.
     - to_json() -> str: Serialize the latent representation to a JSON string, with optional stringified floats.
@@ -173,6 +175,9 @@ class LatentRepresentation:
         self._audio_output = None
         self._latent_vector = None
         self._latent_text = None
+        self._labels = None
+        self._scaler = GlobalScaler()
+        self.json_value_range = 1
 
     # # -------------------------------
     # # Internal helpers
@@ -188,11 +193,22 @@ class LatentRepresentation:
     #     s = "".join(cleaned)
     #     s = s.replace("][", "],[")
     #     return s
+
+    def fit(self, output_range: float = 2):
+        """
+        fits a scaler to the currently held latent representation. 
+        This scaler is applied to json input and output only.
+        """ 
+       
+        ## fit scaler
+        self._scaler.fit(self._latent_vector)
+        self.json_value_range = output_range
+
     
     # -------------------------------
     # JSON serialization
     # -------------------------------
-    def to_json(self, use_string:bool = False, dimension_labels:list = None) -> str:
+    def to_json(self, use_string:bool = False, re_scale:bool=True, dimension_labels:list = None) -> str:
         """
         Convert latent array (length x channel_count) into JSON string containing:
         - latent_vector: could be scaled values or stringified floats.
@@ -202,11 +218,18 @@ class LatentRepresentation:
         # self._scaler.fit(self._latent_representation)
         # scaled_data = self._scaler.scale(self._latent_representation) # scale latent representation to managaleable range
 
+
+        if re_scale:
+            latent_vector_scaled = self._scaler.scale(self._latent_vector,output_range=self.json_value_range)
+        else:
+            latent_vector_scaled =self._latent_vector
+
+
         # TODO: implement string conversion
         if use_string:
-            latent_vector = self._latent_vector
+            latent_vector = latent_vector_scaled
         else:
-            latent_vector = self._latent_vector
+            latent_vector = latent_vector_scaled
         
 
         # Handle 3D latent arrays (batch, channels, length). 2nd dim -> index labels, values come from 3rd dim in order.
@@ -247,52 +270,80 @@ class LatentRepresentation:
             # Refactor above so that it assigns only to the latent representation part of key, regardless of other bits?
         return json.dumps(latent_json)
 
-    def from_json(self, json_in):
+    def from_json(self, json_in, use_string:bool = False, re_scale:bool=True):
         """Deserialize JSON string into latent dictionary and set it.
-        Convert a latent JSON string or dict back into a NumPy array (length x channel_count).
-        Automatically descaled using the global scaler.
-        Handles quirks from Max (e.g., fragmented input, stringified floats).
+        Convert a latent JSON string or dict back into a NumPy array (length x channel_count), text, and any labels given.
+    
         """
-        # If input is not stringified floats, sanitize fragments (for Max)
-        if not use_string:
-            json_in = self.sanitize_fragments(json_in)
 
-        # If input is a list of strings/fragments, join into a single string
-        if isinstance(json_in, list):
-            log("Joining list of strings into single JSON string")
-            log(repr(json_in))
-            json_in = "".join(json_in)
+        loaded_json = json.loads(json_in)
 
-        # If input is a string, parse JSON (sometimes double-encoded from Max)
-        if isinstance(json_in, str):
-            log("Parsing JSON string input...")
-            json_in = json_in.strip()
-            try:
-                # Try double-decoding (addressing bs from Max API)
-                json_in = json.loads(json.loads(json_in))
-            except Exception as e:
-                log(f"JSON decode error: {e}")
-                raise
+        loaded_text  = loaded_json['text']
+        # print('text: ', loaded_text)
+  
+        items = sorted(loaded_json['vector'].items(), key=lambda kv: int(kv[0]))
+  
+        loaded_labels = [value['label'] for key, value in items]
+        # print('labels: ', loaded_labels)
 
-        # TODO: STRETCH: Extract latent representation dictionary
-        # self.logger.log("from_json", {
-        #     "file": json_in.get("file_name"),
-        #     "model": json_in.get("model_name")
-        # })
-        latent_dict = json_in.get("latent_representation", {})
-        dims = sorted(latent_dict.keys())  # Ensure consistent dimension order
+        loaded_data = np.array([value['data'] for key, value in items]).astype(np.float32)[np.newaxis, ...]
+        # print('data: ', loaded_data.shape)
+        
+        if re_scale:
+            loaded_data = self._scaler.descale(loaded_data, output_range=self.json_value_range)
 
-        # Convert values to float and stack into array (shape: length x channel_count)
-        latent_array = np.array([[float(val) for val in latent_dict[dim]] for dim in dims]).T
+        # Store parsed values
+        self._latent_vector = loaded_data
+        self._latent_text = loaded_text
+        self._labels = loaded_labels
 
-        # Descale using global scaler to recover original values
-        if self._scaler.global_min is not None and self._scaler.global_max is not None:
-            latent_array = self._scaler.descale(latent_array)
-        else:
-            log("Warning: Scaler not fitted yet, skipping descaling")
-        self.set_latent_representation(latent_array)
-        log(f"Converted JSON to array of shape {latent_array.shape}, max {latent_array.max()}, min {latent_array.min()}")
-        return
+        return self._latent_vector, self._latent_text, self._labels
+
+        # ignore/comment below
+
+
+
+        
+        # # If input is not stringified floats, sanitize fragments (for Max)
+        # if not use_string:
+        #     json_in = self.sanitize_fragments(json_in)
+
+        # # If input is a list of strings/fragments, join into a single string
+        # if isinstance(json_in, list):
+        #     log("Joining list of strings into single JSON string")
+        #     log(repr(json_in))
+        #     json_in = "".join(json_in)
+
+        # # If input is a string, parse JSON (sometimes double-encoded from Max)
+        # if isinstance(json_in, str):
+        #     log("Parsing JSON string input...")
+        #     json_in = json_in.strip()
+        #     try:
+        #         # Try double-decoding (addressing bs from Max API)
+        #         json_in = json.loads(json.loads(json_in))
+        #     except Exception as e:
+        #         log(f"JSON decode error: {e}")
+        #         raise
+
+        # # TODO: STRETCH: Extract latent representation dictionary
+        # # self.logger.log("from_json", {
+        # #     "file": json_in.get("file_name"),
+        # #     "model": json_in.get("model_name")
+        # # })
+        # latent_dict = json_in.get("latent_representation", {})
+        # dims = sorted(latent_dict.keys())  # Ensure consistent dimension order
+
+        # # Convert values to float and stack into array (shape: length x channel_count)
+        # latent_array = np.array([[float(val) for val in latent_dict[dim]] for dim in dims]).T
+
+        # # Descale using global scaler to recover original values
+        # if self._scaler.global_min is not None and self._scaler.global_max is not None:
+        #     latent_array = self._scaler.descale(latent_array)
+        # else:
+        #     log("Warning: Scaler not fitted yet, skipping descaling")
+        # self.set_latent_representation(latent_array)
+        # log(f"Converted JSON to array of shape {latent_array.shape}, max {latent_array.max()}, min {latent_array.min()}")
+        # return
 
     # -------------------------------
     # Public getters/setters

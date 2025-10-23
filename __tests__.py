@@ -193,11 +193,11 @@ def test_scale():
     test_scaler.fit(latent_vector)
 
     ## scale and check in range
-    latent_vector_scaled = test_scaler.scale(latent_vector)
+    latent_vector_scaled = test_scaler.scale(latent_vector,output_range=2)
     assert (latent_vector_scaled.max() == 2) and (latent_vector_scaled.min() == -2)  , 'scaling not hitting range'
 
     ## descale and check min and max are similar to before
-    latent_vector_descaled = test_scaler.descale(latent_vector_scaled)
+    latent_vector_descaled = test_scaler.descale(latent_vector_scaled,output_range=2)
 
     tolerance = 1e-6
     biggest_difference = np.max(np.abs(latent_vector_descaled - latent_vector))
@@ -388,6 +388,8 @@ def test_load_json():
     },
     "text": "hi im being set up"
 }
+    dummy_json = json.dumps(dummy_json)
+    
     ## Spoof latent representation
     # create a latent (not audio-rate) with dim (1, 4, 22)
     latent_dim = 4
@@ -401,9 +403,59 @@ def test_load_json():
     latent_text = 'hi im being set up'
     test_representation.set_latent_representation(latent_vector,latent_text)
     json_vector, json_text, json_labels  = test_representation.from_json(dummy_json) 
-    return test_outcome((json_vector,json_text), test_name, (latent_vector,latent_text))
+    return test_outcome(np.array_equal(json_vector, latent_vector) and (json_text==latent_text), test_name)
+
+
+### good paths:
+#### load audio, encode, write to json, read, decode, write audio
+
+def test_full_route():
+    test_name = 'full route' 
+    test_start(test_name)
+
+    # load
+    test_buffer = BufferManager()
+    test_buffer.load_buffer('audio/2267__jovica__90-bpm-attack-loop-3-hihats-mastered-16-bit.wav')
+    audio_in = test_buffer.get_input_buffer()
+    assert isinstance(audio_in,np.ndarray), 'internal buffer has wrong type, not numpy'
+
+    # Encode
+    test_model = Model('generative_models/percussion.ts')
+    latent_vector, latent_text  = test_model.encode(audio_in)
+    assert isinstance(latent_vector,np.ndarray) and isinstance(latent_text, str), 'encodings not right type'
+    # print('Encoded latent vector has size: ', latent_vector.shape)
+
+
+    # to json
+    test_representation = LatentRepresentation()
+    test_representation.set_latent_representation(latent_vector,latent_text)
+
+    # Set scale (only do this once per model)
+    test_representation.fit(output_range=1e8)
+    
+    our_json = test_representation.to_json(dimension_labels=[None, None, 'custom 3rd dimension'] ) 
+    assert isinstance(our_json, str), 'json not a string'
+    print("JSON DRLO: ", our_json)
+
+    # from json
+    json_vector, json_text, json_labels  = test_representation.from_json(our_json)
+    assert isinstance(json_vector, np.ndarray) and isinstance(json_text, str) and isinstance(json_labels, list), 'json not loaded properly'
+
+    # Decode works ok
+    audio_out = test_model.decode(*test_representation.get_latent_representation())
+    # print('Decoded audio is size: ', audio_out.shape)
+
+    #
+    test_outcome(test_buffer.set_output_buffer(audio_out), test_name)
+    
+
+
+
 ## give json of the right shape
 # 1
+
+
+
 
 
 # test_loading()
@@ -413,12 +465,13 @@ def test_load_json():
 #test_decoding()
 # encode_decode()
 # load_encode_decode_save()
-# test_scale()
+test_scale()
 
 # test_latent_set()
 # test_latent_get()
 # test_write_json()
-test_load_json()
+# test_load_json()
+test_full_route()
 
 
 

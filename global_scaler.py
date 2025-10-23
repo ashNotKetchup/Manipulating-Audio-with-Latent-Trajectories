@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import warnings
 
 class GlobalScaler:
     """
@@ -8,6 +9,7 @@ class GlobalScaler:
     def __init__(self):
         self.global_min = None
         self.global_max = None
+        
 
     def fit(self, array: np.ndarray):
         """Store min and max from array for future scaling."""
@@ -17,22 +19,25 @@ class GlobalScaler:
             self.global_max += 1e-8  # avoid divide-by-zero
         return self
 
-    def scale(self, array: np.ndarray, output_range: float = 2.0) -> np.ndarray:
+    def scale(self, array: np.ndarray, output_range: float = 1.0) -> np.ndarray:
         """
         Scale array based on stored min/max to a range of ±output_range 
         eg: a output_range=2 means range expands ±200% of original range.
         """
         if self.global_min is None or self.global_max is None:
-            raise ValueError("Scaler not fitted yet")
+            if self.global_min is None or self.global_max is None:
+                warnings.warn("Scaler not fitted yet; returning input unchanged", UserWarning)
+                return array  
         mid = (self.global_max + self.global_min) / 2
         spread = (self.global_max - self.global_min) / 2
         scaled = (array - mid) / spread  # normalize to [-1,1]
         return scaled * output_range
 
-    def descale(self, scaled_array: np.ndarray, output_range: float = 2.0) -> np.ndarray:
+    def descale(self, scaled_array: np.ndarray, output_range: float = 1.0) -> np.ndarray:
         """Reverse the scaling to recover the original values."""
         if self.global_min is None or self.global_max is None:
-            raise ValueError("Scaler not fitted yet")
+            warnings.warn("Scaler not fitted yet; returning input unchanged", UserWarning)
+            return scaled_array  
         mid = (self.global_max + self.global_min) / 2
         spread = (self.global_max - self.global_min) / 2
         array = scaled_array / output_range
