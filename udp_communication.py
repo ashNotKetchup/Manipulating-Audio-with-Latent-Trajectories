@@ -36,7 +36,7 @@ def listen():
         message = parts[1] if len(parts) > 1 else ""
         print(f"From Max {addr}: {prepend}")
         if (prepend == 'sending_latent'):
-            clean_message = message.strip()
+            clean_message = message.strip()    
 #            print(f'Message = {clean_message}')
             try:
                 # parse and apply latent representation, then generate audio and set buffer
@@ -53,12 +53,44 @@ def listen():
 #        reply = f"Python got: {msg}"
 #        sock.sendto(reply.encode("utf-8"), (MAX_IP, MAX_SEND_PORT))
 
+#        loading audio
+        if (prepend == 'load_audio'):
+            audio_path = message.strip('""')
+            try:
+                audio_handler.load_buffer(audio_path)
+                audio_in = audio_handler.get_input_buffer()
+                audio_handler.set_output_buffer(audio_in)
+                assert isinstance(audio_in,np.ndarray), 'internal buffer has wrong type, not numpy'
+            except Exception as e:
+                print(f"Error loading audio: {e}")
+
+            try:
+                # Encode
+                latent_vector, latent_text  = gen_model.encode(audio_in)
+                assert isinstance(latent_vector,np.ndarray) and isinstance(latent_text, str), 'encodings not right type'
+                # print('Encoded latent vector has size: ', latent_vector.shape)
+                
+                # to json
+                latent_representation.set_latent_representation(latent_vector,latent_text)
+
+                # Set scale (only do this once per model + audio combo)
+                latent_representation.fit(output_range=4)
+                
+                latent_json = latent_representation.to_json() 
+                assert isinstance(latent_json, str), 'json not a string'
+
+            except Exception as e:
+                print(f"Error encoding latent: {e}")
+
+            print(latent_json)
+            sock.sendto(latent_json.encode("utf-8"), (MAX_IP, MAX_SEND_PORT))
+        
 threading.Thread(target=listen, daemon=True).start()
 
 # --- SENDER LOOP (optional) ---
 print("Type messages to send to Max (Ctrl+C to quit)")
 try:
-    sock.sendto(dummy_json.encode("utf-8"), (MAX_IP, MAX_SEND_PORT))
+#    sock.sendto(dummy_json.encode("utf-8"), (MAX_IP, MAX_SEND_PORT))
     while True:
         msg = input("> ")
         sock.sendto(msg.encode("utf-8"), (MAX_IP, MAX_SEND_PORT))
