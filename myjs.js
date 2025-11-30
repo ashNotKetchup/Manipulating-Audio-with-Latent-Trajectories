@@ -1,5 +1,8 @@
-const maxApi = require("max-api");
-const DICT_ID = "representations.dict";
+const path = require('path');
+const maxApi = require('max-api');
+const DICT_ID = "myDict.dict";
+const OLD_ID = "old.dict";
+
 // Destination settings
 const PROTOCOL = "http://";
 const HOST = "127.0.0.1";
@@ -8,7 +11,10 @@ const PORT = 5000;
 const URL = `${PROTOCOL}${HOST}:${PORT}`;
 
 // Used for storing the initial value
-let initialDict = {
+let initialDict = {};
+
+dummy_json = {
+        "id": 2,
         "name": "Test Object",
         "tags": ["alpha", "beta", "gamma"],
         "scores": [10, 20, 30, 40],
@@ -18,9 +24,6 @@ let initialDict = {
             {"id": 2, "label": "Two"}
         ]
     };
-
-
-// 'representations.dict'
 
 // Getting and setting dicts is an asynchronous process and the API function
 // calls all return a Promise. We use the async/await syntax here in order
@@ -48,22 +51,18 @@ const send = async (message) => {
 
 maxApi.addHandlers({
 // Handle commands/messages from Max inlet
-	set: async (path, value) => {
-		const dict = await maxApi.updateDict(DICT_ID, path, value);
+	test_set: async () => {
+		// const oldDict = await maxApi.getDict(OLD_ID);
+		const dict = await maxApi.setDict(DICT_ID, dummy_json);
 		await maxApi.outlet(dict);
 	},
-	test_set: async (ID) => {
+	// reset: async () => {
+	// 	const dict = await maxApi.setDict(DICT_ID, initialDict);
+	// 	await maxApi.outlet(dict);
+	// },
 
-
-		const dict = await maxApi.setDict(DICT_ID, initialDict);
-		await maxApi.outlet(dict);
-	},
-	reset: async () => {
-		const dict = await maxApi.setDict(DICT_ID, initialDict);
-		await maxApi.outlet(dict);
-	},
-	// types of messages are 'load' ('request_latent' or 'encode') and 'send' (AKA 'sending_latent' or 'decode')
-	load: async (filepath) => {
+	// types of messages are 'request_latent' or 'encode' and 'sending_latent' or 'decode'
+	request: async (filepath) => {
 		// Node -> Python POST request
 
 		message = {
@@ -72,17 +71,11 @@ maxApi.addHandlers({
 		}
 		
 		reply = await send(message);
-		// reply = {"type": "latent", "content": {"latent_vector": [0.1, 0.2, 0.3, 0.4]}};
-		// data = reply["content"];
+		data = reply["content"];
 
 		if (reply["type"] == 'latent' ){
-			console.log("Received latent representation from Python server: ", reply["content"]);
-			dict = await maxApi.setDict(DICT_ID, reply["content"]);
-			// for debugging:
-			 await maxApi.outlet(dict);
-
-			//  Necessary to signal Max that the dict has been updated
-			await maxApi.outlet("Updated");
+			dict = await maxApi.setDict(DICT_ID, data);
+			await maxApi.outlet(dict);
 		}
 	},
 	
@@ -97,7 +90,7 @@ maxApi.addHandlers({
 			json = '{}';
 		}
 
-		const prefix = 'request_audio';
+		const prefix = 'sending_latent';
 		const message = {
 			"type": prefix,
 			"content": json
@@ -115,13 +108,18 @@ maxApi.addHandlers({
 
 
 
+
+
+
+
+
+
+
+
 // We use this to store the initial value of the dict on process start
 // so that the call to "reset" and reset it accordingly
-async function main() { 
-	initialDict = await maxApi.getDict(DICT_ID); 
-	// console.log("Storing initial dict value for reset:", initialDict);
-
-}
+const main = async () => { initialDict = await maxApi.getDict(DICT_ID); };
 main();
+
 
 

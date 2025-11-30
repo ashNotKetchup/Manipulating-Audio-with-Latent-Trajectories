@@ -434,8 +434,8 @@ def test_full_route():
     test_representation.fit(output_range=1e8)
     
     our_json = test_representation.to_json(dimension_labels=[None, None, 'custom 3rd dimension'] ) 
-    assert isinstance(our_json, str), 'json not a string'
-    print("JSON DRLO: ", our_json)
+    assert isinstance(our_json, dict), 'json not a dictionary'
+    print("JSON DRLO: ", type(our_json), our_json.keys())
 
     # from json
     json_vector, json_text, json_labels  = test_representation.from_json(our_json)
@@ -443,7 +443,7 @@ def test_full_route():
 
     # Decode works ok
     audio_out = test_model.decode(*test_representation.get_latent_representation())
-    # print('Decoded audio is size: ', audio_out.shape)
+    print('Decoded audio is size: ', audio_out.shape)
 
     #
     test_outcome(test_buffer.set_output_buffer(audio_out), test_name)

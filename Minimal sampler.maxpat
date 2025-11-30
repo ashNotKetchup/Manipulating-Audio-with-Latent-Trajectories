@@ -42,7 +42,7 @@
 				"box" : 				{
 					"comment" : "Sample FilePath",
 					"id" : "obj-128",
-					"index" : 0,
+					"index" : 2,
 					"maxclass" : "inlet",
 					"numinlets" : 0,
 					"numoutlets" : 1,
@@ -55,7 +55,7 @@
 				"box" : 				{
 					"comment" : "Formatted Midi Events",
 					"id" : "obj-127",
-					"index" : 0,
+					"index" : 1,
 					"maxclass" : "inlet",
 					"numinlets" : 0,
 					"numoutlets" : 1,
@@ -95,7 +95,7 @@
 					"comment" : "Audio Out (R)",
 					"hint" : "",
 					"id" : "obj-118",
-					"index" : 0,
+					"index" : 2,
 					"maxclass" : "outlet",
 					"numinlets" : 1,
 					"numoutlets" : 0,
@@ -109,7 +109,7 @@
 					"comment" : "Audio Out (L)",
 					"hint" : "",
 					"id" : "obj-115",
-					"index" : 0,
+					"index" : 1,
 					"maxclass" : "outlet",
 					"numinlets" : 1,
 					"numoutlets" : 0,
@@ -404,7 +404,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 1340.322590231895447, 1064.516136646270752, 107.920792400836945, 22.0 ],
-					"text" : "100."
+					"text" : "21362.358277"
 				}
 
 			}
@@ -705,7 +705,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1525.806462526321411, 830.645167231559753, 190.398513793945312, 84.0 ]
+					"patching_rect" : [ 1525.0, 830.0, 190.398513793945312, 84.0 ]
 				}
 
 			}
@@ -1714,7 +1714,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "signal" ],
-					"patching_rect" : [ 245.16129207611084, 975.806458592414856, 413.0, 20.0 ],
+					"patching_rect" : [ 252.90322732925415, 961.0, 413.0, 20.0 ],
 					"text" : "poly~ M4L.SimplerPolyVoice~ @voices 10 @steal 1 @target 0 @args ---samplerbuffer"
 				}
 
@@ -9354,75 +9354,7 @@
 				}
 
 			}
- ],
-		"parameters" : 		{
-			"obj-10" : [ "End", "End", 0 ],
-			"obj-102" : [ "ZoomV", "Zoom", 0 ],
-			"obj-11" : [ "EnableLoop", "Enable", 0 ],
-			"obj-12" : [ "Fade", "Fade", 0 ],
-			"obj-16" : [ "Snap", "Snap", 0 ],
-			"obj-19" : [ "Stop", "Stop", 0 ],
-			"obj-192" : [ "Root", "Root", 0 ],
-			"obj-196" : [ "Sense", "Sense", 0 ],
-			"obj-24" : [ "PitchTime", "Enable", 0 ],
-			"obj-28" : [ "ResetPitchTime", "Reset", 0 ],
-			"obj-30" : [ "Attack", "Att", 0 ],
-			"obj-32" : [ "Decay", "Dec", 0 ],
-			"obj-34" : [ "Sustain", "Sus", 0 ],
-			"obj-35" : [ "Release", "Rel", 0 ],
-			"obj-36" : [ "Curve", "Curve", 0 ],
-			"obj-38" : [ "Stretch", "Stretch", 0 ],
-			"obj-39" : [ "ZoomH", "ZoomH", 0 ],
-			"obj-4" : [ "Start", "Start", 0 ],
-			"obj-42" : [ "Mode", "Mode", 0 ],
-			"obj-43" : [ "Quality", "Quality", 0 ],
-			"obj-45" : [ "Gain", "Gain", 0 ],
-			"obj-49" : [ "EnableTransp", "Enable", 0 ],
-			"obj-50" : [ "Transp", "Transp", 0 ],
-			"obj-52" : [ "Formant", "Formant", 0 ],
-			"obj-53" : [ "EnableFormant", "Enable", 0 ],
-			"obj-57" : [ "EnableStretch", "Enable", 0 ],
-			"obj-73" : [ "Reverse", "Reverse", 0 ],
-			"obj-82" : [ "ZoomInit", "Init", 0 ],
-			"parameterbanks" : 			{
-				"0" : 				{
-					"index" : 0,
-					"name" : "",
-					"parameters" : [ "Stretch", "Transp", "Formant", "Mode", "Quality", "Start", "End", "Gain" ]
-				}
-,
-				"1" : 				{
-					"index" : 1,
-					"name" : "",
-					"parameters" : [ "Fade", "Root", "Sense", "Curve", "Attack", "Decay", "Sustain", "Release" ]
-				}
-,
-				"2" : 				{
-					"index" : 2,
-					"name" : "",
-					"parameters" : [ "EnableLoop", "Snap", "Reverse", "-", "-", "-", "-", "-" ]
-				}
-
-			}
-,
-			"inherited_shortname" : 1
-		}
-,
-		"dependency_cache" : [ 			{
-				"name" : "M4L.SimplerPolyVoice~.maxpat",
-				"bootpath" : "~/Downloads",
-				"patcherrelativepath" : "../../../Downloads",
-				"type" : "JSON",
-				"implicit" : 1
-			}
-, 			{
-				"name" : "helpargs.js",
-				"bootpath" : "C74:/help/resources",
-				"type" : "TEXT",
-				"implicit" : 1
-			}
- ],
-		"autosave" : 0
+ ]
 	}
 
 }

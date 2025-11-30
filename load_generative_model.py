@@ -208,7 +208,7 @@ class LatentRepresentation:
     # -------------------------------
     # JSON serialization
     # -------------------------------
-    def to_json(self, use_string:bool = False, re_scale:bool=True, dimension_labels:list = None) -> str:
+    def to_json(self, use_string:bool = False, re_scale:bool=True, dimension_labels:list = None) -> dict:
         """
         Convert latent array (length x channel_count) into JSON string containing:
         - latent_vector: could be scaled values or stringified floats.
@@ -268,17 +268,23 @@ class LatentRepresentation:
 
         
             # Refactor above so that it assigns only to the latent representation part of key, regardless of other bits?
-        return json.dumps(latent_json)
+        # return json.dumps(latent_json)
+        return latent_json
 
-    def from_json(self, json_in, use_string:bool = False, re_scale:bool=True):
+    def from_json(self, json_in: dict, use_string:bool = False, re_scale:bool=True):
         """Deserialize JSON string into latent dictionary and set it.
         Convert a latent JSON string or dict back into a NumPy array (length x channel_count), text, and any labels given.
     
         """
 
-        loaded_json = json.loads(json_in)
-
+        if isinstance(json_in, dict):
+            loaded_json = json_in
+        else:
+            loaded_json = json.loads(json_in)
+            
+        print("Loaded JSON type:", type(loaded_json))
         loaded_text  = loaded_json['text']
+        print("Loaded text type:", type(loaded_text), loaded_text)
         # print('text: ', loaded_text)
   
         items = sorted(loaded_json['vector'].items(), key=lambda kv: int(kv[0]))
