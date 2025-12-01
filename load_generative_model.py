@@ -5,7 +5,7 @@ from typing import List, Union, Tuple
 from functools import reduce
 import json
 import math
-from global_scaler import GlobalScaler
+from global_scaler import GlobalScaler, TimeCompressor
 
 # -------------------------------
 # AI model class
@@ -177,6 +177,7 @@ class LatentRepresentation:
         self._latent_text = None
         self._labels = None
         self._scaler = GlobalScaler()
+        self._time_compressor = TimeCompressor()
         self.json_value_range = 1
 
     # # -------------------------------
@@ -204,6 +205,10 @@ class LatentRepresentation:
         self._scaler.fit(self._latent_vector)
         self.json_value_range = output_range
 
+        ## Time compression
+        # self._time_compressor.fit(self._latent_vector)
+        
+
     
     # -------------------------------
     # JSON serialization
@@ -221,6 +226,7 @@ class LatentRepresentation:
 
         if re_scale:
             latent_vector_scaled = self._scaler.scale(self._latent_vector,output_range=self.json_value_range)
+            latent_vector_scaled = self._time_compressor.down_scale(latent_vector_scaled)
         else:
             latent_vector_scaled =self._latent_vector
 
@@ -281,7 +287,7 @@ class LatentRepresentation:
             loaded_json = json_in
         else:
             loaded_json = json.loads(json_in)
-            
+
         print("Loaded JSON type:", type(loaded_json))
         loaded_text  = loaded_json['text']
         print("Loaded text type:", type(loaded_text), loaded_text)
@@ -296,7 +302,8 @@ class LatentRepresentation:
         # print('data: ', loaded_data.shape)
         
         if re_scale:
-            loaded_data = self._scaler.descale(loaded_data, output_range=self.json_value_range)
+            loaded_data = self._scaler.descale(
+                self._time_compressor.up_scale(loaded_data), output_range=self.json_value_range)
 
         # Store parsed values
         self._latent_vector = loaded_data

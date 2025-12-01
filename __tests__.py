@@ -1,7 +1,7 @@
 from load_audio import BufferManager
 from load_generative_model import Model, LatentRepresentation
 import numpy as np
-from global_scaler import GlobalScaler
+from global_scaler import GlobalScaler, TimeCompressor
 import json
 
 
@@ -202,6 +202,43 @@ def test_scale():
     tolerance = 1e-6
     biggest_difference = np.max(np.abs(latent_vector_descaled - latent_vector))
     assert biggest_difference <= tolerance, f'descaled vector differs from original by max {biggest_difference} > {tolerance}'
+
+    return test_pass('scaler')
+
+
+## time resampling accurately
+def test_time():
+
+    test_start('time compressor')
+    ## Spoof latent representation
+    # create a latent (not audio-rate) with dim (1, 4, 22)
+    latent_dim = 4
+    latent_length = 220
+
+    # make dummy vector (1, latent_dim, latent_length)
+    t = np.linspace(0, 1.0, latent_length, endpoint=False, dtype=np.float32)
+    # each latent channel is a sine with a different number of cycles
+    channels = [0.5 * np.sin(2 * np.pi * (i + 1) * t) for i in range(latent_dim)]
+    latent_vector = np.stack(channels, axis=0).astype(np.float32)[np.newaxis, ...]  # (1, latent_dim, latent_length)
+
+    ## create latent rep object
+    test_scaler = TimeCompressor()
+
+
+    ## downscale and check shape
+    latent_vector_scaled = test_scaler.down_scale(latent_vector)
+    expected_shape = (1, latent_dim, latent_length // 10)
+    print('Downscaled shape: ', latent_vector_scaled.shape)
+    assert latent_vector_scaled.shape == expected_shape, f'downscaled shape {latent_vector_scaled.shape} != expected {expected_shape}'
+
+    ## upscale and check shape
+    latent_vector_descaled = test_scaler.up_scale(latent_vector_scaled)
+    assert latent_vector_descaled.shape == latent_vector.shape, f'upscaled shape {latent_vector_descaled.shape} != original {latent_vector.shape}'
+
+
+    # tolerance = 1e-6
+    # biggest_difference = np.max(np.abs(latent_vector_descaled - latent_vector))
+    # assert biggest_difference <= tolerance, f'descaled vector differs from original by max {biggest_difference} > {tolerance}'
 
     return test_pass('scaler')
 
@@ -428,6 +465,7 @@ def test_full_route():
 
     # to json
     test_representation = LatentRepresentation()
+    print(latent_vector.shape)
     test_representation.set_latent_representation(latent_vector,latent_text)
 
     # Set scale (only do this once per model)
@@ -465,7 +503,8 @@ def test_full_route():
 #test_decoding()
 # encode_decode()
 # load_encode_decode_save()
-test_scale()
+# test_scale()
+test_time()
 
 # test_latent_set()
 # test_latent_get()
