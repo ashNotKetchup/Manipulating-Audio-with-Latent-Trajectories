@@ -4,10 +4,12 @@ const maxApi = require("max-api");
 
 
 // The relative path to the file you want to watch
-const relativePath = './audio/output.wav';
+// const relativePath = './audio/output.wav';
 
 // Resolve the absolute (full) path
-const fullPath = path.resolve(relativePath);
+// const fullPath = path.resolve(relativePath);
+const fullPath = "/Users/ash/Documents/GitHub/Timbre-Slider/audio/output.wav";
+
 maxApi.outlet(fullPath);
 
 console.log(`Watching file: ${fullPath}`);

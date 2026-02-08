@@ -10,6 +10,7 @@ import json
 # --- SETUP DEPENDENCIES/CLASSES –––
 latent_representation = LatentRepresentation()
 gen_model = Model('generative_models/percussion.ts')
+control_model = ControlModel('control_models/vae_scripted_model.ts')
 audio_handler = BufferManager()
 
 def handle_request_latent(message):
@@ -35,7 +36,7 @@ def handle_request_latent(message):
         latent_representation.set_latent_representation(latent_vector,latent_text)
 
         # Set scale (only do this once per model + audio combo)
-        latent_representation.fit(output_range=4)
+        latent_representation.fit(output_range=2)
         
         latent_json = latent_representation.to_json() 
         assert isinstance(latent_json, dict), 'json not a dictionary'
